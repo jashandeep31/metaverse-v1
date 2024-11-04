@@ -51,8 +51,15 @@ wss.on("connection", function connection(ws) {
           }
           const updatedXChange = user.x - data["x"];
           const updatedYChange = user.y - data["y"];
-          if (updatedXChange > 10 || updatedYChange > 10) {
+          if (updatedXChange > 1 || updatedYChange > 1) {
+            return emit(ws, "error", {
+              message: "user can't move more than 1",
+            });
           }
+          user.x = data["x"];
+          user.y = data["y"];
+          emit(ws, "user_position", user);
+          break;
 
         default:
           emit(ws, "error", { message: "type is not valid" });
