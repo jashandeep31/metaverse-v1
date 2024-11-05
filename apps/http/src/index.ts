@@ -1,17 +1,35 @@
 import express from "express";
 import dotenv from "dotenv";
+import { router } from "./routes/v1";
+import { PrismaClient } from "@repo/db";
 dotenv.config();
 
 //  Just a sample code to
-// import { PrismaClient } from "@repo/db";
-// const client = new PrismaClient();
+const client = new PrismaClient();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.use("/api/v1", router);
+
+const databaseConnection = () => {
+  client
+    .$connect()
+    .then(() => {
+      console.log("connected to database");
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+      });
+    })
+    .catch((error: any) => {
+      console.log("error connecting to database", error);
+    });
+};
+
+databaseConnection();
