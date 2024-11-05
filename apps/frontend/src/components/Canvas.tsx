@@ -17,7 +17,7 @@ const Canvas = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw grid
-    ctx.strokeStyle = "#00000";
+    ctx.strokeStyle = "red";
     for (let i = 0; i < canvas.width; i += 10) {
       ctx.beginPath();
       ctx.moveTo(i, 0);

@@ -4,6 +4,7 @@ import Canvas from "./components/Canvas";
 const App = () => {
   const [currentPostion, setCurrentPostion] = useState({ x: 0, y: 0 });
   const [socket, setSocket] = useState<null | WebSocket>(null);
+
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8001");
     setSocket(socket);
@@ -26,41 +27,49 @@ const App = () => {
           break;
       }
     });
+
+    return () => socket.close(); // Clean up the socket connection on unmount
   }, []);
 
   const sendMovement = useCallback(
     (socket: WebSocket, x: number, y: number) => {
-      if (currentPostion.x + x < 0 || currentPostion.y + y < 0) return;
-      if (currentPostion.x + x > 9 || currentPostion.y + y > 9) return;
+      setCurrentPostion((prevPosition) => {
+        const newX = prevPosition.x + x;
+        const newY = prevPosition.y + y;
+        if (newX < 0 || newY < 0 || newX > 9 || newY > 9) return prevPosition;
 
-      socket.send(
-        JSON.stringify({
-          type: "move",
-          id: "1",
-          x: currentPostion.x + x,
-          y: currentPostion.y + y,
-        })
-      );
+        // Send the updated position to the server
+        socket.send(
+          JSON.stringify({
+            type: "move",
+            id: "1",
+            x: newX,
+            y: newY,
+          })
+        );
+
+        return { x: newX, y: newY };
+      });
     },
-    [currentPostion]
+    []
   );
+
   useEffect(() => {
     if (!socket) return;
     const down = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") {
         sendMovement(socket, 1, 0);
-      }
-      if (e.key === "ArrowLeft") {
+      } else if (e.key === "ArrowLeft") {
         sendMovement(socket, -1, 0);
-      }
-      if (e.key === "ArrowDown") {
+      } else if (e.key === "ArrowDown") {
         sendMovement(socket, 0, 1);
-      }
-      if (e.key === "ArrowUp") {
+      } else if (e.key === "ArrowUp") {
         sendMovement(socket, 0, -1);
       }
     };
     document.addEventListener("keydown", down);
+
+    return () => document.removeEventListener("keydown", down); // Clean up event listener on unmount
   }, [socket, sendMovement]);
 
   return (
