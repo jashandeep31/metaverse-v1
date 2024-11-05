@@ -36,7 +36,7 @@ const Canvas = ({
   }, [currentPostion]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className=" flex items-center justify-center">
       <canvas
         ref={canvasRef}
         width={100}

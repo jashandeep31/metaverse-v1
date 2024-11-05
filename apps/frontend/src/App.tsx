@@ -2,9 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import Canvas from "./components/Canvas";
 
 const App = () => {
-  const [currentPostion, setCurrentPostion] = useState({ x: 1, y: 1 });
+  const [currentPostion, setCurrentPostion] = useState({ x: 0, y: 0 });
   const [socket, setSocket] = useState<null | WebSocket>(null);
-
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8001");
     setSocket(socket);
@@ -32,7 +31,8 @@ const App = () => {
   const sendMovement = useCallback(
     (socket: WebSocket, x: number, y: number) => {
       if (currentPostion.x + x < 0 || currentPostion.y + y < 0) return;
-      if (currentPostion.x + x > 10 || currentPostion.y + y > 10) return;
+      if (currentPostion.x + x > 9 || currentPostion.y + y > 9) return;
+
       socket.send(
         JSON.stringify({
           type: "move",
@@ -65,6 +65,10 @@ const App = () => {
 
   return (
     <div>
+      <div>
+        <p>X: {currentPostion.x}</p>
+        <p>Y: {currentPostion.y}</p>
+      </div>
       <Canvas currentPostion={currentPostion} />
     </div>
   );
