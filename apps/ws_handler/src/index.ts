@@ -28,7 +28,7 @@ function emit(ws: WebSocket, type: string, data: Record<string, any>) {
 }
 
 const appendNewUser = () => {
-  const user = { id: "1", x: 0, y: 0 };
+  const user = { id: "1", x: 1, y: 2 };
   users.push(user);
   return user;
 };
@@ -52,6 +52,7 @@ wss.on("connection", function connection(ws) {
           const updatedXChange = user.x - data["x"];
           const updatedYChange = user.y - data["y"];
           if (updatedXChange > 1 || updatedYChange > 1) {
+            emit(ws, "user_position", user);
             return emit(ws, "error", {
               message: "user can't move more than 1",
             });
@@ -66,6 +67,7 @@ wss.on("connection", function connection(ws) {
           break;
       }
     } catch (error) {
+      console.log(error);
       console.log(`server got fired up`);
     }
   });

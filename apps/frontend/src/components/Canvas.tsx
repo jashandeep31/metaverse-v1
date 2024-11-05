@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 
-const Canvas = () => {
+const Canvas = ({
+  currentPostion,
+}: {
+  currentPostion: { x: number; y: number };
+}) => {
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -28,15 +32,15 @@ const Canvas = () => {
     }
     // CREATE A USER squsare
     ctx.fillStyle = "#00000";
-    ctx.fillRect(0, 10, 10, 10);
-  }, []);
-  // TODO: add code to keystroke event
+    ctx.fillRect(currentPostion.x * 10, currentPostion.y * 10, 10, 10);
+  }, [currentPostion]);
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <canvas
         ref={canvasRef}
-        width={200}
-        height={200}
+        width={100}
+        height={100}
         className="border shadow"
       ></canvas>
     </div>
