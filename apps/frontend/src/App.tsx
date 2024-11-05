@@ -1,8 +1,8 @@
-import React, { useState } from "react";
 import Space from "./components/Space";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./components/Home";
-import { Login, userStatus } from "./components/login";
+import { userStatus } from "./components/login";
+import Login from "./components/login";
 import Signup from "./components/signup";
 import { RecoilRoot, useRecoilValue } from "recoil";
 const App = () => {

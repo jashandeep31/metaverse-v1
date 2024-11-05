@@ -5,7 +5,7 @@ const Space = () => {
   const [currentPostion, setCurrentPostion] = useState({ x: 0, y: 0 });
   const [userId, setUserId] = useState<null | string>(null);
   const [socket, setSocket] = useState<null | WebSocket>(null);
-console.log("inside space");
+  console.log("inside space");
 
   const [users, setUsers] = useState<
     {
@@ -16,9 +16,9 @@ console.log("inside space");
   >([]);
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:3001");
+    const socket = new WebSocket("ws://localhost:8001");
     setSocket(socket);
-    
+
     socket.addEventListener("open", () => {
       // handling the even from the server
     });
@@ -38,7 +38,7 @@ console.log("inside space");
         case "users":
           setUsers(eventData.data);
           console.log(users);
-          
+
           break;
         case "update_user":
           console.log(`here we are`);
@@ -70,6 +70,17 @@ console.log("inside space");
       setCurrentPostion((prevPosition) => {
         const newX = prevPosition.x + x;
         const newY = prevPosition.y + y;
+        console.log(users.length, "users length");
+        const isAlreadyUser = users.find((user) => {
+          console.log(user.x, newX, user.y, newY, "here are hte vluaes");
+          return user.x === newX && user.y === newY;
+        });
+
+        if (isAlreadyUser) {
+          console.log("User already exists at this position");
+          return prevPosition;
+        }
+
         if (newX < 0 || newY < 0 || newX > 9 || newY > 9) return prevPosition;
 
         // Send the updated position to the server
@@ -114,7 +125,10 @@ console.log("inside space");
         <p>X: {currentPostion.x}</p>
         <p>Y: {currentPostion.y}</p>
       </div>
-      <Canvas users={users} currentPostion={currentPostion} />
+
+      {userId && (
+        <Canvas userId={userId} users={users} currentPostion={currentPostion} />
+      )}
     </div>
   );
 };

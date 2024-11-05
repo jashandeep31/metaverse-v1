@@ -10,13 +10,13 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "process.env.DATABASE_URL"
-
+  url      = env("DATABASE_URL")
+  //  url      = "process.env.DATABASE_URL"
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  username  String?
-  password  String
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  username String?
+  password String
 }

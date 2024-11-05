@@ -41,14 +41,13 @@ function broadcast(
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       emit(client, type, data);
-    }//if the client is open emit the data (send it to the client)
+    } //if the client is open emit the data (send it to the client)
   });
 }
 
-
 wss.on("connection", function connection(ws: WebSocket & { id: string }) {
   ws.id = uuidv4();
-  emit(ws, "user_position", appendNewUser(ws.id));//as the connection is establishing sending the user position
+  emit(ws, "user_position", appendNewUser(ws.id)); //as the connection is establishing sending the user position
   broadcast(wss, "users", users);
   broadcast(wss, "test_message", { message: `User connected: ${ws.id}` });
 
@@ -59,17 +58,18 @@ wss.on("connection", function connection(ws: WebSocket & { id: string }) {
         emit(ws, "error", { message: "type is missing" });
       }
       switch (data["type"]) {
-        
         case "move":
           const user = users.find((user) => user.id === data["id"]);
+          const isAlreadyUser = users.find(
+            (user) => user.x === data["x"] && user.y === data["y"]
+          );
           if (!user) {
             emit(ws, "error", { message: "user not found" });
             return;
           }
           const updatedXChange = user.x - data["x"];
           const updatedYChange = user.y - data["y"];
-          console.log(updatedXChange, updatedYChange);
-          if (updatedXChange > 1 || updatedYChange > 1) {
+          if (updatedXChange > 1 || updatedYChange > 1 || isAlreadyUser) {
             emit(ws, "user_position", user);
             return emit(ws, "error", {
               message: "user can't move more than 1",

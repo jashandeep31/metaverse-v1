@@ -1,43 +1,40 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import {useSetRecoilState,atom} from 'recoil';
-import { useNavigate } from 'react-router-dom';
+import React, { FormEvent, useState } from "react";
+import axios from "axios";
+import { useSetRecoilState, atom } from "recoil";
+import { useNavigate } from "react-router-dom";
 
-  const userStatus = atom({
-    key: "userStatus",
-    default: false
-  })
-  
+export const userStatus = atom({
+  key: "userStatus",
+  default: true,
+});
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const setStatus = useSetRecoilState(userStatus);
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
-
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     // Simple email validation
     if (!/\S+@\S+\.\S+/.test(email)) {
-      console.error('Invalid email format');
+      console.error("Invalid email format");
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/signin', {
+      const response = await axios.post("http://localhost:8000/api/v1/signin", {
         email,
         password,
       });
       console.log(response);
-      if(response.status===200){
+      if (response.status === 200) {
         setStatus(true);
-        navigate('/space')
-        
+        navigate("/space");
       }
     } catch (error) {
-      console.error('Error sending data:', error);
+      console.error("Error sending data:", error);
     }
   };
 
@@ -86,4 +83,8 @@ const navigate = useNavigate();
   );
 };
 
-export  {userStatus,Login};
+// export { userStatus, Login };
+export default Login;
+
+// 1. ws authentication
+// 2. web rtc

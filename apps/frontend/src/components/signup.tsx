@@ -1,29 +1,28 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import axios from "axios";
 
 const Signup = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     // Simple email validation
     if (!/\S+@\S+\.\S+/.test(email)) {
-      console.error('Invalid email format');
+      console.error("Invalid email format");
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/signup', {
+      const response = await axios.post("http://localhost:8000/api/v1/signup", {
         email,
         password,
       });
       console.log(response.data);
     } catch (error) {
-      console.error('Error sending data:', error);
+      console.error("Error sending data:", error);
     }
-    
   };
 
   return (
