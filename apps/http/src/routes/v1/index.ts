@@ -10,9 +10,9 @@ export const router = Router();
 
 router.post('/signup', async (req: Request, res: Response): Promise<any> => {
     console.log("inside signup")
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json('Missing username or password');
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json('Missing email or password');
     }
     
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -20,7 +20,7 @@ router.post('/signup', async (req: Request, res: Response): Promise<any> => {
     try {
         const user = await client.user.create({
             data: {
-                username,
+                email,
                 password: hashedPassword
             }
         });
@@ -34,15 +34,15 @@ router.post('/signup', async (req: Request, res: Response): Promise<any> => {
 
 
 router.post('/signin',async (req: Request, res: Response): Promise<any>  => {
-   const {username,password }=req.body;
+   const {email,password }=req.body;
 
-    if(!username || !password){
-        return res.status(400).json('Missing username or password');
+    if(!email || !password){
+        return res.status(400).json('Missing email or password');
     }
     
     const user=await client.user.findUnique({
         where:{
-            username
+            email
         }
     })
     
@@ -56,12 +56,17 @@ router.post('/signin',async (req: Request, res: Response): Promise<any>  => {
         return res.status(400).json({ error: 'Incorrect password' });
     }
     
-    const token=jwt.sign({userId:user.id},process.env.JWT_SECRET as string,{expiresIn:'5d'});
+    const token=jwt.sign({userId:user.id},process.env.JWT_SECRET_KEY as string,{expiresIn:'5d'});
 
     return res
     .setHeader('Authorization', `Bearer ${token}`)
+    .cookie('token', token, {
+        httpOnly: true, 
+        secure: true,   
+        sameSite: 'strict',
+      })
     .status(200)
-    .json({ user: user.username });
+    .json({ user: user.email });
 });
 
 

@@ -2,8 +2,9 @@ import express from "express";
 import dotenv from "dotenv";
 import { router } from "./routes/v1";
 import { PrismaClient } from "@repo/db";
-dotenv.config();
+import cors from "cors";
 
+dotenv.config();
 //  Just a sample code to
 const client = new PrismaClient();
 
@@ -14,6 +15,10 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");
+});
+
+cors({
+  origin: "*",
 });
 
 app.use("/api/v1", router);

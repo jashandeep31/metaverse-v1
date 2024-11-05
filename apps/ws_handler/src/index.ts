@@ -41,12 +41,14 @@ function broadcast(
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       emit(client, type, data);
-    }
+    }//if the client is open emit the data (send it to the client)
   });
 }
+
+
 wss.on("connection", function connection(ws: WebSocket & { id: string }) {
   ws.id = uuidv4();
-  emit(ws, "user_position", appendNewUser(ws.id));
+  emit(ws, "user_position", appendNewUser(ws.id));//as the connection is establishing sending the user position
   broadcast(wss, "users", users);
   broadcast(wss, "test_message", { message: `User connected: ${ws.id}` });
 
@@ -57,6 +59,7 @@ wss.on("connection", function connection(ws: WebSocket & { id: string }) {
         emit(ws, "error", { message: "type is missing" });
       }
       switch (data["type"]) {
+        
         case "move":
           const user = users.find((user) => user.id === data["id"]);
           if (!user) {
