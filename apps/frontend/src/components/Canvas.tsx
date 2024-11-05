@@ -11,6 +11,7 @@ const Canvas = ({
     y: number;
   }[];
 }) => {
+  
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
   useEffect(() => {
