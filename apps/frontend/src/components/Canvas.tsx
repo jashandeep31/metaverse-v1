@@ -2,8 +2,14 @@ import { useEffect, useRef } from "react";
 
 const Canvas = ({
   currentPostion,
+  users,
 }: {
   currentPostion: { x: number; y: number };
+  users: {
+    id: string;
+    x: number;
+    y: number;
+  }[];
 }) => {
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
 
@@ -33,7 +39,10 @@ const Canvas = ({
     // CREATE A USER squsare
     ctx.fillStyle = "#00000";
     ctx.fillRect(currentPostion.x * 10, currentPostion.y * 10, 10, 10);
-  }, [currentPostion]);
+    users.map((user: { id: string; x: number; y: number }) => {
+      ctx.fillRect(user.x * 10, user.y * 10, 10, 10);
+    });
+  }, [currentPostion, users]);
 
   return (
     <div className=" flex items-center justify-center">
