@@ -3,8 +3,15 @@ import Canvas from "./components/Canvas";
 
 const App = () => {
   const [currentPostion, setCurrentPostion] = useState({ x: 0, y: 0 });
+  const [userId, setUserId] = useState<null | string>(null);
   const [socket, setSocket] = useState<null | WebSocket>(null);
-
+  const [users, setUsers] = useState<
+    {
+      id: string;
+      x: number;
+      y: number;
+    }[]
+  >([]);
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8001");
     setSocket(socket);
@@ -15,15 +22,34 @@ const App = () => {
       const eventData = JSON.parse(event.data);
       switch (eventData.type) {
         case "user_position":
-          console.log(`here web ha`);
+          setUserId(eventData.data.id);
           setCurrentPostion({
             x: eventData.data.x,
             y: eventData.data.y,
           });
           break;
 
+        case "users":
+          setUsers(eventData.data);
+          break;
+        case "update_user":
+          console.log(`here we are`);
+          setUsers((prevUsers) => {
+            console.log(prevUsers);
+            const userIndex = prevUsers.findIndex(
+              (user) => user.id === eventData.data.id
+            );
+            if (userIndex === -1) return prevUsers;
+            prevUsers[userIndex].x = eventData.data.x;
+            prevUsers[userIndex].y = eventData.data.y;
+            return [...prevUsers];
+          });
+          break;
+        case "test_message":
+          console.log(eventData.type, eventData.data.message);
+          break;
         default:
-          console.log(eventData.type);
+          console.log(eventData.type, eventData.data.message);
           break;
       }
     });
@@ -42,7 +68,7 @@ const App = () => {
         socket.send(
           JSON.stringify({
             type: "move",
-            id: "1",
+            id: userId,
             x: newX,
             y: newY,
           })
@@ -51,7 +77,7 @@ const App = () => {
         return { x: newX, y: newY };
       });
     },
-    []
+    [userId]
   );
 
   useEffect(() => {
@@ -75,10 +101,12 @@ const App = () => {
   return (
     <div>
       <div>
+        <p>Id:{userId?.slice(0, 3)}</p>
+        <p>Total: {users.length}</p>
         <p>X: {currentPostion.x}</p>
         <p>Y: {currentPostion.y}</p>
       </div>
-      <Canvas currentPostion={currentPostion} />
+      <Canvas users={users} currentPostion={currentPostion} />
     </div>
   );
 };
