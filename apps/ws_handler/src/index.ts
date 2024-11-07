@@ -28,7 +28,9 @@ function emit(ws: WebSocket, type: string, data: Record<string, any>) {
 }
 
 const appendNewUser = (id: string) => {
-  const user = { id: id, x: 0, y: 0 };
+  const random = Math.floor(Math.random() * 10);
+  console.log(random);
+  const user = { id: id, x: random, y: random };
   users.push(user);
   return user;
 };

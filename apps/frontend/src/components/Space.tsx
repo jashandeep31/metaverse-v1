@@ -24,10 +24,12 @@ const Space = () => {
         audio: true,
       });
       stream.getAudioTracks().forEach((track) => {
+        // peerConnection.addTrack(track, stream);
         peerConnection.addTrack(track, stream);
       });
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
+          console.log(`icen `, event.candidate);
           socket?.send(
             JSON.stringify({
               type: "candidate",
@@ -69,7 +71,18 @@ const Space = () => {
     },
     [peerConnection]
   );
-
+  const handleCall = useCallback(async () => {
+    if (!peerConnection) return;
+    const offer = await peerConnection.createOffer();
+    peerConnection.setLocalDescription(offer);
+    socket?.send(
+      JSON.stringify({
+        type: "offer",
+        id: userId,
+        offer: offer,
+      })
+    );
+  }, [peerConnection, socket, userId]);
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8001");
     setSocket(socket);
@@ -162,11 +175,22 @@ const Space = () => {
             y: newY,
           })
         );
+        // checking user is nearby
+        const nearUser = users.find((user) => {
+          const distance = Math.sqrt(
+            (user.x - newX) ** 2 + (user.y - newY) ** 2
+          );
+          if (distance === 1 && user.id !== userId) return user;
+        });
 
+        if (nearUser) {
+          handleCall();
+        }
+        // code to creat a call
         return { x: newX, y: newY };
       });
     },
-    [userId, users]
+    [userId, users, handleCall]
   );
 
   useEffect(() => {
