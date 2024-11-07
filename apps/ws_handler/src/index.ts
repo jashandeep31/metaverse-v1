@@ -36,10 +36,12 @@ const appendNewUser = (id: string) => {
 function broadcast(
   wss: WebSocketServer,
   type: string,
-  data: Record<string, any>
+  data: Record<string, any>,
+  id?: string
 ) {
-  wss.clients.forEach((client) => {
+  wss.clients.forEach((client: any) => {
     if (client.readyState === WebSocket.OPEN) {
+      if (id && client.id === id) return;
       emit(client, type, data);
     } //if the client is open emit the data (send it to the client)
   });
@@ -58,6 +60,18 @@ wss.on("connection", function connection(ws: WebSocket & { id: string }) {
         emit(ws, "error", { message: "type is missing" });
       }
       switch (data["type"]) {
+        case "offer":
+          const offer = data["offer"];
+          broadcast(wss, "offer", { offer, id: ws.id }, ws.id);
+          break;
+        case "candidate":
+          const candidate = data["candidate"];
+          broadcast(wss, "candidate", { candidate, id: ws.id }, ws.id);
+          break;
+        case "answer":
+          const answer = data["answer"];
+          broadcast(wss, "answer", { answer, id: ws.id }, ws.id);
+          break;
         case "move":
           const user = users.find((user) => user.id === data["id"]);
           const isAlreadyUser = users.find(

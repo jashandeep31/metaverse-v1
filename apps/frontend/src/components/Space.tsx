@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Canvas from "./Canvas";
 
 const Space = () => {
   const [currentPostion, setCurrentPostion] = useState({ x: 0, y: 0 });
   const [userId, setUserId] = useState<null | string>(null);
   const [socket, setSocket] = useState<null | WebSocket>(null);
-  console.log("inside space");
-
+  const peerConnection = useMemo(() => {
+    return new RTCPeerConnection();
+  }, []);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const [users, setUsers] = useState<
     {
       id: string;
@@ -14,6 +16,59 @@ const Space = () => {
       y: number;
     }[]
   >([]);
+
+  useEffect(() => {
+    (async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: false,
+        audio: true,
+      });
+      stream.getAudioTracks().forEach((track) => {
+        peerConnection.addTrack(track, stream);
+      });
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket?.send(
+            JSON.stringify({
+              type: "candidate",
+              id: userId,
+              candidate: event.candidate,
+            })
+          );
+        }
+      };
+    })();
+
+    // setting up the stream of the ref
+    if (!peerConnection) return;
+    peerConnection.ontrack = (event) => {
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = event.streams[0];
+      }
+    };
+  }, [peerConnection, socket, userId]);
+  const handleAnswer = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async ({ data }: any) => {
+      if (!peerConnection) return;
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(data.answer)
+      );
+    },
+    [peerConnection]
+  );
+
+  const handleOffer = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async ({ data }: any, socket: WebSocket) => {
+      if (!peerConnection || !socket) return;
+      peerConnection.setRemoteDescription(data.offer);
+      const answer = await peerConnection.createAnswer();
+      peerConnection.setLocalDescription(answer);
+      socket.send(JSON.stringify({ type: "answer", answer }));
+    },
+    [peerConnection]
+  );
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8001");
@@ -25,7 +80,6 @@ const Space = () => {
 
     socket.addEventListener("message", (event) => {
       const eventData = JSON.parse(event.data);
-
       switch (eventData.type) {
         case "user_position":
           setUserId(eventData.data.id);
@@ -37,11 +91,9 @@ const Space = () => {
 
         case "users":
           setUsers(eventData.data);
-          console.log(users);
 
           break;
         case "update_user":
-          console.log(`here we are`);
           setUsers((prevUsers) => {
             console.log(prevUsers);
             const userIndex = prevUsers.findIndex(
@@ -56,6 +108,26 @@ const Space = () => {
         case "test_message":
           console.log(eventData.type, eventData.data.message);
           break;
+        case "candidate": {
+          if (peerConnection) {
+            (async () => {
+              await peerConnection.addIceCandidate(
+                new RTCIceCandidate(eventData.data.candidate)
+              );
+            })();
+          }
+          break;
+        }
+        case "offer": {
+          console.log(`off is their`);
+          handleOffer({ data: eventData.data }, socket);
+          break;
+        }
+        case "answer": {
+          console.log(`answer is their`);
+          handleAnswer({ data: eventData.data });
+          break;
+        }
         default:
           console.log(eventData.type, eventData.data.message);
           break;
@@ -63,16 +135,14 @@ const Space = () => {
     });
 
     return () => socket.close(); // Clean up the socket connection on unmount
-  }, []);
+  }, [handleOffer, handleAnswer, peerConnection]);
 
   const sendMovement = useCallback(
     (socket: WebSocket, x: number, y: number) => {
       setCurrentPostion((prevPosition) => {
         const newX = prevPosition.x + x;
         const newY = prevPosition.y + y;
-        console.log(users.length, "users length");
         const isAlreadyUser = users.find((user) => {
-          console.log(user.x, newX, user.y, newY, "here are hte vluaes");
           return user.x === newX && user.y === newY;
         });
 
@@ -96,7 +166,7 @@ const Space = () => {
         return { x: newX, y: newY };
       });
     },
-    [userId]
+    [userId, users]
   );
 
   useEffect(() => {
@@ -124,6 +194,23 @@ const Space = () => {
         <p>Total: {users.length}</p>
         <p>X: {currentPostion.x}</p>
         <p>Y: {currentPostion.y}</p>
+        <button
+          onClick={async () => {
+            if (!peerConnection) return;
+            const offer = await peerConnection.createOffer();
+            peerConnection.setLocalDescription(offer);
+            socket?.send(
+              JSON.stringify({
+                type: "offer",
+                id: userId,
+                offer: offer,
+              })
+            );
+          }}
+        >
+          Offer call
+        </button>
+        <audio ref={remoteAudioRef} autoPlay />
       </div>
 
       {userId && (
